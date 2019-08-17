@@ -3,8 +3,9 @@ const app = express();
 const mongoose = require("mongoose");
 const bodyparser = require("body-parser");
 const ecommerceRouter = express.Router();
-const routes = require('./routes');
+const hateoasLink = require('express-hateoas-links');
 
+const routes = require('./routes');
 
 const Usuario = require("./app/models/user");
 
@@ -17,6 +18,8 @@ mongoose.connect(
 
 app.use(bodyparser.urlencoded({ extended: true }));
 app.use(bodyparser.json());
+// setar o uso do módulo hateoas
+app.use(hateoasLink);
 //Middleware. Toda a requisição passara aqui.
 app.use(function(req, res, next) {
   console.log("Algo está acontecendo aqui.", req.url);
@@ -38,8 +41,6 @@ app.get("/usuarios", function(req, res) {
     }
   });
 });
-
-
 
 app.use("/ecommerce", routes(ecommerceRouter));
 app.listen(port, function(req, res) {

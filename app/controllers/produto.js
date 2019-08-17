@@ -8,7 +8,7 @@ module.exports ={
           if (error) {
             res.send("Erro ao tentar recuperar os produtos" + error);
           } else {
-            res.json(produtos);
+            res.status(200).json(produtos);
           }
         })
       },
@@ -23,7 +23,7 @@ module.exports ={
           if (error) {
             res.send("Erro ao cadastrar o produto"+ error);
           } 
-            res.json({ message: "Produto cadastrado com sucesso"});
+            res.status(201).json({ message: "Produto cadastrado com sucesso"});
         });
       },
     listarUm: function(req, res) {
@@ -34,7 +34,7 @@ module.exports ={
           if (error) {
             res.send("Erro ao recuperar o Produto " + error);
           } else if (Produto) {
-            res.json(Produto);
+            res.status(200).json(Produto);
           } else {
             res.json({
               message: "Id do Produto não encontrado",
@@ -71,7 +71,7 @@ module.exports ={
               if (error) {
                 res.send("Erro ao gravar o produto" + error);
               }
-              res.json({ message: "Produto atualizado com sucesso!" });
+              res.status().json({ message: "Produto atualizado com sucesso!" });
             });
           } else {
             res.json({
