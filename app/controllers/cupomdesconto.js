@@ -18,14 +18,29 @@ module.exports = {
     });
   },
   adicionar: function(req, res) {
-    let cupomDesconto = new CupomDesconto();
-    cupomDesconto.dataInicial = req.body.dataInicial;
+    let cupomDesconto;
+    try {
+      cupomDesconto = new CupomDesconto(req.body);
+    } catch (e) {
+      //Bad Request: o que o usuário mandou não esta de acordo com o modelo do objeto
+      res.status(400).json(e);
+      return;
+    }
+    /*cupomDesconto.dataInicial = req.body.dataInicial;
     cupomDesconto.dataFinal = req.body.dataFinal;
     cupomDesconto.valorInicial = req.body.valorInicial;
     cupomDesconto.valorFinal = req.body.valorFinal;
     cupomDesconto.quantidadeCupons = req.body.quantidadeCupons;
     cupomDesconto.quantidadeUsada = req.body.quantidadeUsada;
-    cupomDesconto.percentualDesconto = req.body.percentualDesconto;
+    cupomDesconto.percentualDesconto = req.body.percentualDesconto;*/
+
+    // Validação manula - forçar a execução
+    const error = cupomDesconto.validateSync();
+    if (error) {
+      console.log("Mongoose Validation identificou problemas");
+      res.status(400).json(error);
+      return;
+    }
 
     cupomDesconto.save(function(error, novoCupom) {
       if (error) {
@@ -33,20 +48,23 @@ module.exports = {
         res.json(error);
       } else {
         let url = req.protocol + "://" + req.get("host") + req.originalUrl;
-        res
-          .status(201)
-          .json({ message: "Cupom de desconto cadastrado!" }, [
-            {
-              rel: "recuperar",
-              method: "GET",
-              href: url + novoCupom._id,
-              title: "Recuperar Cupom de desconto"
-            }
-          ]);
+        res.status(201).json({ message: "Cupom de desconto cadastrado!" }, [
+          {
+            rel: "recuperar",
+            method: "GET",
+            href: url + novoCupom._id,
+            title: "Recuperar Cupom de desconto"
+          }
+        ]);
       }
     });
   },
   listarUm: function(req, res) {
+    if (!ObjectId.isValid(req.params.cupons_id)) {
+      res.status(400).json({
+        message: "Código inválido"
+      });
+    }
     CupomDesconto.findById(ObjectId(req.params.cupons_id), function(
       error,
       cupomDesconto
@@ -139,9 +157,11 @@ module.exports = {
   alterarParcial: function(req, res) {
     let id = req.params.cupons_id;
     let cupomDesconto = req.body;
+
+    const options = { runValidators: true };
     CupomDesconto.updateOne(
       { _id: ObjectId(id) },
-      { $set: cupomDesconto },
+      { $set: cupomDesconto }, options,
       function(error) {
         if (error) {
           res.statusCode = 400;
