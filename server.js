@@ -3,23 +3,28 @@ const app = express();
 const mongoose = require("mongoose");
 const bodyparser = require("body-parser");
 const ecommerceRouter = express.Router();
-const hateoasLink = require('express-hateoas-links');
+const hateoasLink = require("express-hateoas-links");
+require("dotenv-safe").config();
+const passport = require('passport');
+require('./app/utils/passport')(passport);
 
-const routes = require('./routes');
 
-const Usuario = require("./app/models/user");
+const routes = require("./routes");
+
+const Usuario = require("./app/models/usuario");
 
 const port = process.env.PORT || 3000;
 
 mongoose.connect(
   "mongodb+srv://usermongo:C0nnect123@cluster0-povns.mongodb.net/ecommerce?retryWrites=true&w=majority",
-  { useNewUrlParser: true }
+    { useCreateIndex: true, useNewUrlParser: true }
 );
 
 app.use(bodyparser.urlencoded({ extended: true }));
 app.use(bodyparser.json());
 // setar o uso do módulo hateoas
 app.use(hateoasLink);
+app.use(passport.initialize());
 //Middleware. Toda a requisição passara aqui.
 app.use(function(req, res, next) {
   console.log("Algo está acontecendo aqui.", req.url);
@@ -42,7 +47,7 @@ app.get("/usuarios", function(req, res) {
   });
 });
 
-app.use("/ecommerce", routes(ecommerceRouter));
+app.use("/ecommerce", routes(ecommerceRouter, passport));
 app.listen(port, function(req, res) {
   console.log(`Server running on port ${port}`);
 });
