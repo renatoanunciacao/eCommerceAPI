@@ -1,18 +1,25 @@
-const mongoose = require("mongoose");
-
+const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const schemaProduto = new Schema({
-  nomeProduto: { type: String, maxlength: 60, minlength: 3 },
-  precoProduto: { type: Number, min: 0 },
-  descricaoProduto: { type: String, maxlength: 200 },
-  quantidadeEstoqueProduto: {
-    type: Number,
-    default: 0
-    // required: [true, 'A quantidade de Produtos no estoque é obrigatória']
-  }
+const produtoSchema = new Schema({
+   // Tipos Aceitáveis: String, Number, Boolean, Date, Array, ObjectId 
+   nomeProduto: {
+      type: String,
+      required: [true, '`{PATH}` é obrigatório.'],
+      minlength: [3, '`{PATH}` muito curto.'],
+      maxlength: [60, 'Excedeu o limite do campo `{PATH}` que é de `{MAXLENGTH}`.']
+   },
+   precoProduto: {
+      type: Number,
+      min: [0, '`{PATH}` deve ser maior ou igual a `{MIN}`.']
+   },
+   descricaoProduto: {
+      type: String,
+      maxlength: [200, 'Excedeu o limite do campo `{PATH}` que é de `{MAXLENGTH}`.']
+   },
+   quantidadeEstoqueProduto: {
+      type: Number,
+      default: 0 
+   }
 });
-
-const Produto = mongoose.model("Produto", schemaProduto, "produtos");
-
-module.exports = Produto;
+module.exports = mongoose.model('Produto', produtoSchema, 'produtos');

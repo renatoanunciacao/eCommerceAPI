@@ -1,40 +1,58 @@
 const cupomDescontoCon = require("./app/controllers/cupomdesconto");
-const produtoCon = require("./app/controllers/produto");
-const usuarioCon = require("./app/controllers/usuario");
+const produtoCon = require("./app/controllers/produto"),
+  usuarioCon = require("./app/controllers/usuario");
+const comprasCon = require("./app/controllers/compra");
+
 const validadorToken = require("./app/utils/authJWT").validadorDeToken;
+const authGoogle = require("./app/controllers/authGoogle");
 
 module.exports = function(ecommerceRouter, passport) {
+  // 2. Criar rotas para o Router de Cupons
+
   // Rotas que terminam com /cupons (serve: POST e GET ALL)
   ecommerceRouter
     .route("/cupons")
-    // Função cadastrar cupom: POST
+    //Método cadastrar cupom: POST
     .post(cupomDescontoCon.adicionar)
-    // Função GET cupons
-    .get(cupomDescontoCon.listarTudo);
-  // Rotas que terminarem com /cupons/:cupons_id(GET, PUT, PATCH, DELETE)
+    // Método GET Cupons
+    .get(authGoogle.validate, cupomDescontoCon.listarTudo);
+
+  // Rotas que terminarem com /cupons/:cupons_id (GET, PUT, DELETE e PATCH)
   ecommerceRouter
     .route("/cupons/:cupons_id")
     .get(cupomDescontoCon.listarUm)
+    // Alterar um recurso específico
     .put(cupomDescontoCon.alterar)
     // Alteração de um objeto parcialmente
     .patch(cupomDescontoCon.alterarParcial)
-    // excluir cupom de desconto
+    // Excluir Cupom de Desconto
     .delete(cupomDescontoCon.excluir);
+
+  // 2. Criar rotas para o Router de Produtos
 
   ecommerceRouter
     .route("/produtos")
     .post(produtoCon.adicionar)
     .get(produtoCon.listarTudo);
-  // Rotas que terminarem com /produtos/:produto_id(GET, PUT, PATCH, DELETE)
+
   ecommerceRouter
-    .route("/produtos/:produto_id")
+    .route("/produtos/:produtos_id")
     .get(produtoCon.listarUm)
     .put(produtoCon.alterar)
-    .patch(produtoCon.alterarParcial)
-    .delete(produtoCon.excluir);
+    .delete(produtoCon.excluir)
+    .patch(produtoCon.alterarParcial);
 
+  ecommerceRouter
+    .route("/compras")
+    //cadastrar compra
+    .post(comprasCon.adicionar)
+    .get(authGoogle.validate, comprasCon.listarTudo);
+
+    ecommerceRouter
+    .route("/compras/:compra_id")
+    .get(comprasCon.listarUm)
+    .put(comprasCon.alterar)
   /**
-   *
    * Usuario
    */
   ecommerceRouter
@@ -44,26 +62,29 @@ module.exports = function(ecommerceRouter, passport) {
 
   ecommerceRouter.route("/login").post(usuarioCon.login);
 
+  ecommerceRouter
+    .route("/produtos/saida/:saida/:campos?")
+    .get(produtoCon.listaParametrizado);
+
   /**
    * OAuth
    */
-
-  ecommerceRouter
-    .route("/auth/google")
-    .get(
-      passport.authenticate("google", {
-        scope: ["https://www.googleapis.com/auth/userinfo.profile"]
-      })
-    );
-
+  ecommerceRouter.route("/auth/google").get(
+    passport.authenticate("google", {
+      scope: [
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email"
+      ]
+    })
+  );
   ecommerceRouter
     .route("/auth/google/callback")
-    .get(passport.authenticate("google", { failRedirect: "/" }),
-     function(req, res) {
-      res.json({
-        token: "Aquivamos vamos mostrar o token"
-      });
-    });
+    .get(
+      passport.authenticate("google", { failRedirect: "/" }),
+      authGoogle.retornoAutenticacao
+    );
+
+  ecommerceRouter.route("/logout").get(authGoogle.logout);
 
   return ecommerceRouter;
 };
